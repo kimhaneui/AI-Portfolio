@@ -1,0 +1,86 @@
+{
+  "personal": {
+    "name": "홍길동",
+    "email": "hong@example.com",
+    "phone": "010-1234-5678",
+    "location": "서울, 대한민국",
+    "github": "https://github.com/username",
+    "linkedin": "https://linkedin.com/in/username"
+  },
+  "summary": "풀스택 개발자로서 5년 이상의 경험을 보유하고 있으며, React, Next.js, Node.js 등의 최신 기술 스택을 활용한 웹 애플리케이션 개발에 전문성을 가지고 있습니다. 사용자 경험을 중시하며, 성능 최적화와 코드 품질 향상에 지속적으로 노력하고 있습니다.",
+  "experience": [
+    {
+      "company": "테크 스타트업",
+      "position": "시니어 프론트엔드 개발자",
+      "period": "2022.01 - 현재",
+      "description": "Next.js 기반의 대규모 웹 애플리케이션 개발 및 유지보수를 담당했습니다. 팀 리더로서 5명의 개발자를 관리하며, 코드 리뷰 및 기술 멘토링을 수행했습니다.",
+      "technologies": ["Next.js", "React", "TypeScript", "Tailwind CSS", "GraphQL"]
+    },
+    {
+      "company": "소프트웨어 회사",
+      "position": "풀스택 개발자",
+      "period": "2020.06 - 2021.12",
+      "description": "React와 Node.js를 활용한 웹 애플리케이션 개발을 담당했습니다. RESTful API 설계 및 구현, 데이터베이스 최적화 등의 업무를 수행했습니다.",
+      "technologies": ["React", "Node.js", "Express", "PostgreSQL", "MongoDB"]
+    },
+    {
+      "company": "IT 컨설팅",
+      "position": "주니어 개발자",
+      "period": "2019.03 - 2020.05",
+      "description": "다양한 클라이언트 프로젝트에 참여하여 웹 개발 경험을 쌓았습니다. JavaScript, HTML, CSS를 활용한 프론트엔드 개발을 주로 담당했습니다.",
+      "technologies": ["JavaScript", "HTML", "CSS", "jQuery", "PHP"]
+    }
+  ],
+  "education": [
+    {
+      "school": "서울대학교",
+      "degree": "컴퓨터공학 학사",
+      "period": "2015.03 - 2019.02",
+      "description": "컴퓨터 과학 전공으로 데이터 구조, 알고리즘, 소프트웨어 공학 등의 핵심 과목을 이수했습니다."
+    }
+  ],
+  "skills": {
+    "frontend": ["React", "Next.js", "TypeScript", "JavaScript", "HTML", "CSS", "Tailwind CSS"],
+    "backend": ["Node.js", "Express", "Python", "Django", "RESTful API", "GraphQL"],
+    "database": ["PostgreSQL", "MongoDB", "Redis", "Supabase"],
+    "tools": ["Git", "Docker", "AWS", "Vercel", "CI/CD"],
+    "ai_ml": ["OpenAI API", "Vector Search", "RAG", "Embeddings"]
+  },
+  "projects": [
+    {
+      "name": "AI 챗봇 포트폴리오",
+      "description": "RAG 기반의 AI 챗봇을 활용한 포트폴리오 웹사이트입니다. Supabase의 pgvector를 활용한 벡터 검색과 OpenAI의 GPT 모델을 결합하여 구현했습니다.",
+      "technologies": ["Next.js", "Supabase", "OpenAI", "RAG", "Vector Search"],
+      "github": "https://github.com/username/ai-portfolio"
+    },
+    {
+      "name": "실시간 협업 도구",
+      "description": "WebSocket을 활용한 실시간 협업 도구를 개발했습니다. 다중 사용자 동시 편집 기능을 구현하여 사용자 경험을 향상시켰습니다.",
+      "technologies": ["React", "Node.js", "WebSocket", "MongoDB"],
+      "github": "https://github.com/username/collaboration-tool"
+    }
+  ],
+  "certifications": [
+    {
+      "name": "AWS Certified Solutions Architect",
+      "issuer": "Amazon Web Services",
+      "date": "2023.05"
+    },
+    {
+      "name": "Google Cloud Professional Developer",
+      "issuer": "Google Cloud",
+      "date": "2022.11"
+    }
+  ],
+  "languages": [
+    {
+      "language": "한국어",
+      "proficiency": "모국어"
+    },
+    {
+      "language": "영어",
+      "proficiency": "비즈니스 수준"
+    }
+  ]
+}
+
