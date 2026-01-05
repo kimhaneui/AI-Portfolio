@@ -50,22 +50,34 @@ export default function ChatBot() {
         body: JSON.stringify({ message: userMessage }),
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        throw new Error('Failed to get response')
+        // 에러 응답의 상세 메시지 표시
+        const errorMessage = data.details || data.error || 'Failed to get response'
+        console.error('API Error:', errorMessage)
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: `오류가 발생했습니다: ${errorMessage}\n\n환경 변수가 올바르게 설정되었는지 확인해주세요.`,
+          },
+        ])
+        return
       }
 
-      const data = await response.json()
       setMessages((prev) => [
         ...prev,
         { role: 'assistant', content: data.response },
       ])
     } catch (error) {
       console.error('Error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          content: '죄송합니다. 오류가 발생했습니다. 다시 시도해주세요.',
+          content: `죄송합니다. 오류가 발생했습니다: ${errorMessage}\n\n다시 시도해주세요.`,
         },
       ])
     } finally {

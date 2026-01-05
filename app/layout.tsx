@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
+import { SidebarProvider } from "@/components/SidebarContext";
+import MainContent from "@/components/MainContent";
 
 export const metadata: Metadata = {
   title: "AI Portfolio",
@@ -15,12 +17,12 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body>
-        <div className="flex min-h-screen">
-          <Sidebar />
-          <main className="flex-1 ml-64 bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
-            {children}
-          </main>
-        </div>
+        <SidebarProvider>
+          <div className="flex min-h-screen">
+            <Sidebar />
+            <MainContent>{children}</MainContent>
+          </div>
+        </SidebarProvider>
       </body>
     </html>
   );

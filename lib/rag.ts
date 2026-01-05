@@ -9,15 +9,21 @@ export async function keywordMatch(query: string): Promise<string | null> {
     // 키워드를 소문자로 변환하여 검색
     const normalizedQuery = query.toLowerCase().trim()
     
-    // 키워드가 포함된 응답 검색
+    // 키워드가 포함된 응답 검색 (.single() 대신 .maybeSingle() 사용)
     const { data, error } = await supabaseAdmin
       .from('keyword_responses')
       .select('response')
       .ilike('keyword', `%${normalizedQuery}%`)
       .limit(1)
-      .single()
+      .maybeSingle()
     
-    if (error || !data) {
+    if (error) {
+      // 테이블이 없거나 다른 에러인 경우 무시하고 계속 진행
+      console.warn('Keyword match error (non-fatal):', error.message)
+      return null
+    }
+    
+    if (!data) {
       return null
     }
     
@@ -48,7 +54,9 @@ export async function vectorSearch(
     })
     
     if (error) {
-      console.error('Vector search error:', error)
+      // 함수가 없거나 다른 에러인 경우 경고만 출력하고 빈 배열 반환
+      console.warn('Vector search error (non-fatal):', error.message)
+      console.warn('Make sure the match_resume_embeddings function exists in Supabase')
       return []
     }
     
@@ -94,19 +102,25 @@ Important guidelines:
  * RAG 파이프라인: 키워드 매칭 → 벡터 검색 → LLM 응답
  */
 export async function processRAGQuery(query: string): Promise<string> {
-  // 1단계: 키워드 매칭 시도
-  const keywordResponse = await keywordMatch(query)
-  
-  if (keywordResponse) {
-    return keywordResponse
+  try {
+    // 1단계: 키워드 매칭 시도
+    const keywordResponse = await keywordMatch(query)
+    
+    if (keywordResponse) {
+      return keywordResponse
+    }
+    
+    // 2단계: 벡터 검색 수행
+    const contexts = await vectorSearch(query, 3)
+    
+    // 컨텍스트가 없어도 LLM이 기본 응답을 생성할 수 있도록 진행
+    // 3단계: LLM으로 최종 응답 생성
+    const response = await generateResponse(query, contexts)
+    
+    return response
+  } catch (error) {
+    console.error('RAG query processing error:', error)
+    throw error
   }
-  
-  // 2단계: 벡터 검색 수행
-  const contexts = await vectorSearch(query, 3)
-  
-  // 3단계: LLM으로 최종 응답 생성
-  const response = await generateResponse(query, contexts)
-  
-  return response
 }
 
