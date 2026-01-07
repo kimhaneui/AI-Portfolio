@@ -1,7 +1,11 @@
+import { config } from 'dotenv'
 import { readFileSync } from 'fs'
 import { join } from 'path'
-import { generateEmbedding } from '../lib/openai'
+import { generateEmbedding } from '../lib/gemini'
 import { supabaseAdmin } from '../lib/supabase'
+
+// .env 파일 로드
+config({ path: join(process.cwd(), '.env.local') })
 
 interface ResumeData {
   personal: {

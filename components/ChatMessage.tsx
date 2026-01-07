@@ -1,5 +1,7 @@
 'use client'
 
+import { parseMarkdown } from '@/lib/markdown'
+
 interface ChatMessageProps {
   role: 'user' | 'assistant'
   content: string
@@ -44,7 +46,7 @@ export default function ChatMessage({ role, content }: ChatMessageProps) {
         <div className={`text-sm leading-relaxed whitespace-pre-wrap ${
           isUser ? 'text-gray-800' : 'text-gray-800'
         }`}>
-          {content}
+          {parseMarkdown(content)}
         </div>
       </div>
 

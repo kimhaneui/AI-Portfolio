@@ -1,5 +1,5 @@
 import { supabaseAdmin } from './supabase'
-import { generateEmbedding, generateChatCompletion } from './openai'
+import { generateChatCompletion } from './gemini'
 
 /**
  * 1단계: 키워드 매칭을 통해 명시적인 정보를 Database에서 찾기

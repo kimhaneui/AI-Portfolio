@@ -15,8 +15,8 @@ export default function ChatBot() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const suggestions = [
-    "포트폴리오에서 어떤 기술 스택을 사용하셨나요?",
-    "진행하신 프로젝트에 대해 설명해주세요",
+    "어떤 기술 스택을 사용하셨나요?",
+    "가장 최근에 진행하신 프로젝트에 대해 설명해주세요",
   ]
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -42,10 +42,15 @@ export default function ChatBot() {
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/chat', {
+      // Supabase Edge Function URL 사용
+      const edgeFunctionUrl = process.env.NEXT_PUBLIC_EDGE_FUNCTION_URL ||
+        'https://zdpehfjfqrvfmkpnyzbz.supabase.co/functions/v1/ai-portfolio'
+
+      const response = await fetch(edgeFunctionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({ message: userMessage }),
       })
