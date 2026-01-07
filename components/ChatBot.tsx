@@ -3,6 +3,11 @@
 import { useState, useRef, useEffect } from "react";
 import ChatMessage from "./ChatMessage";
 import { predefinedAnswers } from "@/data/predefined-answers";
+import {
+  canAskQuestion,
+  logQuestion,
+  getRemainingQuestions,
+} from "@/lib/rate-limit";
 
 interface Message {
   role: "user" | "assistant";
@@ -13,6 +18,9 @@ export default function ChatBot() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [remainingQuestions, setRemainingQuestions] = useState(
+    getRemainingQuestions()
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const suggestions = [
@@ -51,15 +59,60 @@ export default function ChatBot() {
     scrollToBottom();
   }, [messages]);
 
+  // 남은 질문 횟수 업데이트
+  useEffect(() => {
+    const updateRemaining = () => {
+      setRemainingQuestions(getRemainingQuestions());
+    };
+
+    updateRemaining();
+    // 1분마다 업데이트
+    const interval = setInterval(updateRemaining, 60000);
+
+    return () => clearInterval(interval);
+  }, [messages]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!input.trim() || isLoading) return;
 
+    // 사전 답변 체크 (사전 답변은 제한에 포함하지 않음)
+    if (predefinedAnswers[input.trim()]) {
+      const userMessage = input.trim();
+      setInput("");
+      setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
+
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: predefinedAnswers[userMessage] },
+      ]);
+      return;
+    }
+
+    // 질문 횟수 제한 확인
+    const rateLimitCheck = canAskQuestion();
+    if (!rateLimitCheck.allowed) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: `⚠️ ${rateLimitCheck.reason}\n\n사전 준비된 질문은 제한 없이 사용할 수 있습니다.`,
+        },
+      ]);
+      return;
+    }
+
     const userMessage = input.trim();
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setIsLoading(true);
+
+    // 질문 로그 기록
+    logQuestion();
+    setRemainingQuestions(getRemainingQuestions());
 
     try {
       // Supabase Edge Function URL 사용
@@ -103,6 +156,9 @@ export default function ChatBot() {
         ...prev,
         { role: "assistant", content: data.response },
       ]);
+
+      // 남은 질문 횟수 업데이트
+      setRemainingQuestions(getRemainingQuestions());
     } catch (error) {
       console.error("Error:", error);
       const errorMessage =
@@ -223,6 +279,20 @@ export default function ChatBot() {
       {/* Input Form */}
       <div className="p-4 sm:p-6 bg-white/30 backdrop-blur-md border-t border-white/50">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
+          {/* 질문 횟수 표시 */}
+          {remainingQuestions.daily > 0 && (
+            <div className="mb-3 text-center">
+              <span className="text-xs text-gray-600 bg-white/60 px-3 py-1 rounded-full">
+                남은 질문: {remainingQuestions.daily}개
+                {remainingQuestions.hourly < remainingQuestions.daily && (
+                  <span className="ml-2 text-gray-500">
+                    (시간당 {remainingQuestions.hourly}개)
+                  </span>
+                )}
+              </span>
+            </div>
+          )}
+
           <div className="flex gap-3 items-center">
             {/* Input Container */}
             <div className="flex-1">
@@ -235,14 +305,19 @@ export default function ChatBot() {
                   focus:outline-none focus:border-purple-400 transition-all duration-300 text-gray-900 placeholder-gray-500
                   border-gray-300/50 shadow-lg
                   disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={isLoading}
+                disabled={isLoading || remainingQuestions.daily === 0}
               />
             </div>
 
             {/* Send Button */}
             <button
               type="submit"
-              disabled={isLoading || !input.trim()}
+              disabled={
+                isLoading ||
+                !input.trim() ||
+                remainingQuestions.daily === 0 ||
+                !canAskQuestion().allowed
+              }
               className="flex-shrink-0 w-12 h-12 bg-purple-500
                 text-white rounded-full flex items-center justify-center
                 hover:scale-110 hover:bg-purple-600 active:scale-95
