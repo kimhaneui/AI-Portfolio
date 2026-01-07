@@ -55,6 +55,12 @@ BEGIN
 END;
 $$;
 
+-- keyword_responses 테이블 확장 (템플릿 지원)
+ALTER TABLE keyword_responses ADD COLUMN IF NOT EXISTS question_patterns TEXT[];
+ALTER TABLE keyword_responses ADD COLUMN IF NOT EXISTS template_variables JSONB;
+ALTER TABLE keyword_responses ADD COLUMN IF NOT EXISTS data_source TEXT DEFAULT 'static';
+ALTER TABLE keyword_responses ADD COLUMN IF NOT EXISTS match_type TEXT DEFAULT 'exact';
+
 -- 샘플 키워드 데이터 (선택사항)
 INSERT INTO keyword_responses (keyword, response, category) VALUES
 ('안녕', '안녕하세요! 포트폴리오에 대해 궁금한 것이 있으시면 언제든 물어보세요.', 'greeting'),
@@ -62,4 +68,16 @@ INSERT INTO keyword_responses (keyword, response, category) VALUES
 ('이름', '제 이름은 홍길동입니다. data/resume.json 파일에서 실제 이름으로 수정하실 수 있습니다.', 'personal'),
 ('연락처', '이메일: hong@example.com, 전화번호: 010-1234-5678입니다. data/resume.json 파일에서 실제 연락처로 수정하실 수 있습니다.', 'personal')
 ON CONFLICT (keyword) DO NOTHING;
+
+-- 대화 히스토리 테이블 (맥락 관리용, 선택사항)
+CREATE TABLE IF NOT EXISTS chat_sessions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  question TEXT NOT NULL,
+  response TEXT NOT NULL,
+  extracted_entities JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_session_id ON chat_sessions(session_id, created_at DESC);
 

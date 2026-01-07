@@ -1,94 +1,123 @@
-'use client'
+"use client";
 
-import { useState, useRef, useEffect } from 'react'
-import ChatMessage from './ChatMessage'
+import { useState, useRef, useEffect } from "react";
+import ChatMessage from "./ChatMessage";
+import { predefinedAnswers } from "@/data/predefined-answers";
 
 interface Message {
-  role: 'user' | 'assistant'
-  content: string
+  role: "user" | "assistant";
+  content: string;
 }
 
 export default function ChatBot() {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const suggestions = [
-    "어떤 기술 스택을 사용하셨나요?",
-    "가장 최근에 진행하신 프로젝트에 대해 설명해주세요",
-  ]
+    "어떤 기술 스택을 사용하세요?",
+    "가장 최근에 진행한 프로젝트는 무엇인가요?",
+    "현재 회사에서 무엇을 하나요?",
+    "React 경험이 있나요?",
+    "경력은 몇 년인가요?",
+  ];
 
-  const handleSuggestionClick = (suggestion: string) => {
-    setInput(suggestion)
-  }
+  const handleSuggestionClick = async (suggestion: string) => {
+    // 사전 준비된 답변이 있으면 즉시 표시
+    if (predefinedAnswers[suggestion]) {
+      const userMessage = suggestion;
+      setInput("");
+      setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
+
+      // 약간의 딜레이를 주어 자연스러운 흐름을 만듦
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: predefinedAnswers[suggestion] },
+      ]);
+    } else {
+      // 사전 답변이 없으면 기존처럼 input에만 설정
+      setInput(suggestion);
+    }
+  };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    scrollToBottom();
+  }, [messages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (!input.trim() || isLoading) return
+    if (!input.trim() || isLoading) return;
 
-    const userMessage = input.trim()
-    setInput('')
-    setMessages((prev) => [...prev, { role: 'user', content: userMessage }])
-    setIsLoading(true)
+    const userMessage = input.trim();
+    setInput("");
+    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
+    setIsLoading(true);
 
     try {
       // Supabase Edge Function URL 사용
-      const edgeFunctionUrl = process.env.NEXT_PUBLIC_EDGE_FUNCTION_URL ||
-        'https://zdpehfjfqrvfmkpnyzbz.supabase.co/functions/v1/ai-portfolio'
+      const edgeFunctionUrl =
+        process.env.NEXT_PUBLIC_EDGE_FUNCTION_URL ||
+        "https://zdpehfjfqrvfmkpnyzbz.supabase.co/functions/v1/ai-portfolio";
 
       const response = await fetch(edgeFunctionUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
         },
-        body: JSON.stringify({ message: userMessage }),
-      })
+        body: JSON.stringify({
+          message: userMessage,
+          conversationHistory: messages.slice(-5).map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+        }),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
         // 에러 응답의 상세 메시지 표시
-        const errorMessage = data.details || data.error || 'Failed to get response'
-        console.error('API Error:', errorMessage)
+        const errorMessage =
+          data.details || data.error || "Failed to get response";
+        console.error("API Error:", errorMessage);
         setMessages((prev) => [
           ...prev,
           {
-            role: 'assistant',
+            role: "assistant",
             content: `오류가 발생했습니다: ${errorMessage}\n\n환경 변수가 올바르게 설정되었는지 확인해주세요.`,
           },
-        ])
-        return
+        ]);
+        return;
       }
 
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: data.response },
-      ])
+        { role: "assistant", content: data.response },
+      ]);
     } catch (error) {
-      console.error('Error:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      console.error("Error:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       setMessages((prev) => [
         ...prev,
         {
-          role: 'assistant',
+          role: "assistant",
           content: `죄송합니다. 오류가 발생했습니다: ${errorMessage}\n\n다시 시도해주세요.`,
         },
-      ])
+      ]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -100,17 +129,31 @@ export default function ChatBot() {
             {/* Header with Icon */}
             <div className="text-center mb-12 animate-fade-in">
               <div className="inline-flex items-center justify-center w-16 h-16 mb-6 bg-purple-500 rounded-2xl shadow-lg">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                <svg
+                  className="w-8 h-8 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                  />
                 </svg>
               </div>
               <h1 className="text-5xl font-bold text-gray-900 mb-4">AI 챗봇</h1>
-              <p className="text-xl text-gray-600">포트폴리오에 대해 무엇이든 물어보세요</p>
+              <p className="text-xl text-gray-600">
+                포트폴리오에 대해 무엇이든 물어보세요
+              </p>
             </div>
 
             {/* Suggestions */}
             <div className="w-full max-w-2xl">
-              <p className="text-sm text-gray-500 mb-4 text-center">질문 제안</p>
+              <p className="text-sm text-gray-500 mb-4 text-center">
+                질문 제안
+              </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {suggestions.map((suggestion, index) => (
                   <button
@@ -159,8 +202,14 @@ export default function ChatBot() {
                   <div className="bg-purple-100/90 backdrop-blur-md rounded-2xl px-5 py-4 shadow-xl border border-purple-200">
                     <div className="flex space-x-2 items-center">
                       <div className="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce"></div>
-                      <div className="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
-                      <div className="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+                      <div
+                        className="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce"
+                        style={{ animationDelay: "0.15s" }}
+                      ></div>
+                      <div
+                        className="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce"
+                        style={{ animationDelay: "0.3s" }}
+                      ></div>
                     </div>
                   </div>
                 </div>
@@ -201,7 +250,7 @@ export default function ChatBot() {
                 transition-all duration-300 shadow-lg"
             >
               <svg
-                className={`w-6 h-6 ${isLoading ? 'animate-spin' : ''}`}
+                className={`w-6 h-6 ${isLoading ? "animate-spin" : ""}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -227,6 +276,5 @@ export default function ChatBot() {
         </form>
       </div>
     </div>
-  )
+  );
 }
-
