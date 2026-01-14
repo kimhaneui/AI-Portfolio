@@ -36,12 +36,12 @@ export function parseMarkdown(text: string): React.ReactNode[] {
   })
 
   // 다른 패턴 매칭
-  let otherMatch
+  let otherMatch: RegExpExecArray | null
   while ((otherMatch = otherPattern.exec(text)) !== null) {
     // 링크와 겹치지 않는 경우만 추가
     const isOverlapping = linkMatches.some(link => 
-      otherMatch.index >= link.index && 
-      otherMatch.index < link.index + link.length
+      otherMatch!.index >= link.index && 
+      otherMatch!.index < link.index + link.length
     )
     if (!isOverlapping) {
       allMatches.push({

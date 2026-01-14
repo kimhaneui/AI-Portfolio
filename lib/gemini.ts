@@ -7,6 +7,39 @@ if (!geminiApiKey) {
 }
 
 const GEMINI_CHAT_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+const GEMINI_EMBEDDING_URL = `https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${geminiApiKey}`;
+
+/**
+ * Google Gemini 임베딩 생성
+ */
+export async function generateEmbedding(text: string): Promise<number[]> {
+  if (!geminiApiKey) {
+    throw new Error(
+      "GEMINI_API_KEY is not set. Please configure it in .env.local"
+    );
+  }
+
+  const response = await fetch(GEMINI_EMBEDDING_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "models/text-embedding-004",
+      content: {
+        parts: [{ text }],
+      },
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(`Gemini Embedding API error: ${JSON.stringify(data)}`);
+  }
+
+  return data.embedding?.values || [];
+}
 
 /**
  * Google Gemini 채팅 완성 생성

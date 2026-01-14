@@ -1,5 +1,5 @@
 import { supabaseAdmin } from './supabase'
-import { generateChatCompletion } from './gemini'
+import { generateChatCompletion, generateEmbedding } from './gemini'
 
 /**
  * 1단계: 키워드 매칭을 통해 명시적인 정보를 Database에서 찾기
@@ -95,7 +95,7 @@ Important guidelines:
     { role: 'user' as const, content: userMessage },
   ]
 
-  return await generateChatCompletion(messages, 'gpt-3.5-turbo')
+  return await generateChatCompletion(messages, 'gemini-1.5-flash')
 }
 
 /**
