@@ -152,9 +152,23 @@ export default function ChatBot() {
         return;
       }
 
+      // 응답 검증 및 처리
+      const responseText = data.response || "";
+      if (!responseText || responseText.trim().length === 0) {
+        console.error("Empty response from API");
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: "죄송합니다. 응답을 받지 못했습니다. 다시 시도해주세요.",
+          },
+        ]);
+        return;
+      }
+
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: data.response },
+        { role: "assistant", content: responseText.trim() },
       ]);
 
       // 남은 질문 횟수 업데이트

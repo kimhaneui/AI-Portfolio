@@ -69,13 +69,36 @@ serve(async (req) => {
               ],
             },
           ],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 1000 },
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 2048, // 토큰 제한 증가
+          },
         }),
       });
+
       const data = await response.json();
-      if (!response.ok)
+      if (!response.ok) {
+        console.error("Gemini API Error:", JSON.stringify(data));
         throw new Error(`Gemini Chat error: ${JSON.stringify(data)}`);
-      return data.candidates[0]?.content?.parts[0]?.text || "";
+      }
+
+      // 모든 parts를 합쳐서 반환 (여러 부분으로 나뉠 수 있음)
+      const candidate = data.candidates?.[0];
+      if (!candidate) {
+        throw new Error("No candidate in Gemini response");
+      }
+
+      const parts = candidate.content?.parts || [];
+      const fullText = parts
+        .map((part: any) => part.text || "")
+        .join("")
+        .trim();
+
+      if (!fullText) {
+        throw new Error("Empty response from Gemini");
+      }
+
+      return fullText;
     }
 
     // 질문 정규화
@@ -181,7 +204,7 @@ serve(async (req) => {
         if (Array.isArray(value)) return value.join(", ");
         return String(value);
       });
-      
+
       // 빈 값이나 "없음", "없습니다"가 포함된 라인 제거
       result = result
         .split("\n")
@@ -190,7 +213,8 @@ serve(async (req) => {
           // 빈 라인은 유지 (구조 유지)
           if (trimmed === "") return true;
           // "없음" 또는 "없습니다"가 포함된 라인 제거
-          if (trimmed.includes("없음") || trimmed.includes("없습니다")) return false;
+          if (trimmed.includes("없음") || trimmed.includes("없습니다"))
+            return false;
           // **카테고리**: (빈 값) 형태의 라인 제거
           if (/^\*\*[^*]+\*\*:\s*$/.test(trimmed)) return false;
           // **카테고리**: 없음 형태의 라인 제거
@@ -198,10 +222,10 @@ serve(async (req) => {
           return true;
         })
         .join("\n");
-      
+
       // 연속된 빈 줄 정리 (최대 2개 연속만 허용)
       result = result.replace(/\n{3,}/g, "\n\n");
-      
+
       return result.trim();
     }
 
@@ -268,6 +292,65 @@ serve(async (req) => {
         referencedEntity,
         entityType,
       };
+    }
+
+    // 간단한 키워드 기반 하드코딩 답변 (개인 정보 등)
+    function matchSimpleKeywords(query: string): string | null {
+      const lowerQuery = query.toLowerCase().trim();
+
+      // 나이 관련 키워드
+      if (
+        lowerQuery.includes("나이") ||
+        lowerQuery.includes("연령") ||
+        lowerQuery.includes("몇 살") ||
+        lowerQuery.includes("생년") ||
+        lowerQuery.includes("태어난")
+      ) {
+        return "제 나이는 30세입니다. (1994년생)";
+      }
+
+      // 이메일 관련 키워드
+      if (
+        lowerQuery.includes("이메일") ||
+        lowerQuery.includes("메일") ||
+        lowerQuery.includes("email") ||
+        lowerQuery.includes("연락처") ||
+        (lowerQuery.includes("연락") && lowerQuery.includes("방법"))
+      ) {
+        return "이메일로 연락주시면 감사하겠습니다: kimhaneui2@naver.com\n\n또는 GitHub, LinkedIn을 통해서도 연락 가능합니다.";
+      }
+
+      // 전화번호 관련 키워드
+      if (
+        lowerQuery.includes("전화") ||
+        lowerQuery.includes("번호") ||
+        lowerQuery.includes("핸드폰") ||
+        lowerQuery.includes("휴대폰")
+      ) {
+        return "전화번호는 이메일로 먼저 연락주시면 공유드리겠습니다.";
+      }
+
+      // LinkedIn 관련 키워드
+      if (
+        lowerQuery.includes("linkedin") ||
+        lowerQuery.includes("링크드인") ||
+        lowerQuery.includes("링크드 인")
+      ) {
+        return "LinkedIn 프로필: [프로필 보기](https://www.linkedin.com/in/%ED%95%98%EB%8A%AC-%EA%B9%80-16967a21b/)\n\n경력 및 전문성을 확인하실 수 있습니다.";
+      }
+
+      // 위치/거주지 관련 키워드
+      if (
+        lowerQuery.includes("거주") ||
+        lowerQuery.includes("살고") ||
+        lowerQuery.includes("위치") ||
+        lowerQuery.includes("어디서") ||
+        (lowerQuery.includes("어디") && lowerQuery.includes("사는"))
+      ) {
+        return "현재 서울에 거주하고 있습니다.";
+      }
+
+      return null;
     }
 
     // 하드코딩 질문 매칭 (우선순위: 정확 > 키워드)
@@ -641,7 +724,17 @@ ${
       );
     }
 
-    // 하드코딩 질문 매칭 (최우선)
+    // 간단한 키워드 매칭 (최우선 - AI 호출 없음)
+    const simpleKeywordResponse = matchSimpleKeywords(message);
+    if (simpleKeywordResponse) {
+      console.log("✅ Simple keyword response matched");
+      return new Response(JSON.stringify({ response: simpleKeywordResponse }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // 하드코딩 질문 매칭 (데이터베이스 기반)
     const hardcodedResponse = await matchHardcodedQuestion(message);
     if (hardcodedResponse) {
       console.log("✅ Hardcoded response matched");
