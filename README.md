@@ -12,7 +12,7 @@ RAG(Retrieval-Augmented Generation) 기반 AI 챗봇을 활용한 포트폴리�
 
 ## 기술 스택
 
-- **프론트엔드**: Next.js 14, React, TypeScript, Tailwind CSS
+- **프론트엔드**: Next.js 16, React, TypeScript, Tailwind CSS
 - **백엔드**: Supabase Edge Functions (Deno 런타임)
 - **데이터베이스**: Supabase (PostgreSQL + pgvector)
 - **AI 모델**: Google Gemini (gemini-2.5-flash, text-embedding-004)

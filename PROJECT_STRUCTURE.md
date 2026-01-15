@@ -9,7 +9,7 @@ Supabase 테이블 데이터를 벡터 DB로 변환하고, Google Gemini API를 
 
 ### Frontend
 
-- **Next.js 14** - React 프레임워크
+- **Next.js 16** - React 프레임워크
 - **TypeScript** - 타입 안정성
 - **Tailwind CSS** - 스타일링
 

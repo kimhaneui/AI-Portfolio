@@ -39,7 +39,7 @@ export default function Home() {
               <div className="p-4 bg-purple-50/80 rounded-2xl border border-purple-100">
                 <strong className="text-purple-700">프론트엔드:</strong>
                 <p className="text-gray-700 mt-1">
-                  Next.js 14, React, Tailwind CSS
+                  Next.js 16, React, Tailwind CSS
                 </p>
               </div>
               <div className="p-4 bg-purple-50/80 rounded-2xl border border-purple-100">
