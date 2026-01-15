@@ -29,7 +29,7 @@ export default function Home() {
           <section className="bg-white/90 backdrop-blur-md p-8 rounded-3xl shadow-sm border border-gray-200/50">
             <h2 className="text-3xl font-bold mb-4 text-gray-800">소개</h2>
             <p className="text-gray-700 leading-relaxed">
-              궁금한 점은 챗봇을 통해 물어봐주세요 :)
+              저에게 궁금한 점은 챗봇을 통해 물어봐주세요 :)
             </p>
           </section>
 
@@ -56,7 +56,9 @@ export default function Home() {
               </div>
               <div className="p-4 bg-purple-50/80 rounded-2xl border border-purple-100">
                 <strong className="text-purple-700">AI 모델:</strong>
-                <p className="text-gray-700 mt-1">OpenAI GPT-3.5-turbo</p>
+                <p className="text-gray-700 mt-1">
+                  Google Gemini (gemini-2.5-flash)
+                </p>
               </div>
             </div>
           </section>
